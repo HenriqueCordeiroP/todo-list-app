@@ -4,10 +4,10 @@ phases:
     install:
         commands:
             - 'echo Instalando kubectl'
-            - 'set -euo pipefail'
+            - 'set -e'
             - 'curl -fsSL -o /usr/local/bin/kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.30.0/2024-07-11/bin/linux/amd64/kubectl'
             - 'chmod +x /usr/local/bin/kubectl'
-            - "echo 'Verificando kubectl…'"
+            - 'echo Verificando kubectl'
             - 'file /usr/local/bin/kubectl || true'
             - 'head -c 4 /usr/local/bin/kubectl | hexdump -C || true'
             - "kubectl version --client --output=yaml || (echo 'kubectl inválido' && exit 1)"
