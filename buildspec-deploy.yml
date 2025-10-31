@@ -3,21 +3,21 @@ version: 0.2
 phases:
     install:
         commands:
-            - echo "Instalando kubectl"
-            - curl -sLo kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.30.0/2024-07-11/bin/linux/amd64/kubectl
-            - chmod +x kubectl && mv kubectl /usr/local/bin/kubectl
+            - 'echo Instalando kubectl'
+            - 'curl -sLo kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.30.0/2024-07-11/bin/linux/amd64/kubectl'
+            - 'chmod +x kubectl && mv kubectl /usr/local/bin/kubectl'
 
     pre_build:
         commands:
-            - echo "Configurando kubeconfig para $CLUSTER_NAME"
-            - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION
-            - IMAGE_URI=$(python -c 'import json,sys; print(json.load(open("imageDetail.json"))["ImageURI"])')
-            - echo "Nova imagem: $IMAGE_URI"
+            - 'echo Configurando kubeconfig para $CLUSTER_NAME'
+            - 'aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION'
+            - 'IMAGE_URI=$(python -c ''import json,sys; print(json.load(open("imageDetail.json"))["ImageURI"])''); export IMAGE_URI'
+            - 'echo Nova_imagem=$IMAGE_URI'
 
     build:
         commands:
-            - kubectl -n $NAMESPACE set image deployment/hcp2-los2-eu-central-1-deployment-todo todo=$IMAGE_URI
-            - kubectl -n $NAMESPACE rollout status deployment/hcp2-los2-eu-central-1-deployment-todo
+            - 'kubectl -n $NAMESPACE set image deployment/hcp2-los2-eu-central-1-deployment-todo todo=$IMAGE_URI'
+            - 'kubectl -n $NAMESPACE rollout status deployment/hcp2-los2-eu-central-1-deployment-todo'
 
 artifacts:
     files:
