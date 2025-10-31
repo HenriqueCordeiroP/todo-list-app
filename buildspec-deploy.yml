@@ -4,20 +4,28 @@ phases:
     install:
         commands:
             - 'echo Instalando kubectl'
-            - 'curl -sLo kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.30.0/2024-07-11/bin/linux/amd64/kubectl'
-            - 'chmod +x kubectl && mv kubectl /usr/local/bin/kubectl'
+            - 'set -euo pipefail'
+            - 'curl -fsSL -o /usr/local/bin/kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.30.0/2024-07-11/bin/linux/amd64/kubectl'
+            - 'chmod +x /usr/local/bin/kubectl'
+            - "echo 'Verificando kubectl…'"
+            - 'file /usr/local/bin/kubectl || true'
+            - 'head -c 4 /usr/local/bin/kubectl | hexdump -C || true'
+            - "kubectl version --client --output=yaml || (echo 'kubectl inválido' && exit 1)"
 
     pre_build:
         commands:
             - 'echo Configurando kubeconfig para $CLUSTER_NAME'
             - 'aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION'
-            - 'IMAGE_URI=$(python -c ''import json,sys; print(json.load(open("imageDetail.json"))["ImageURI"])''); export IMAGE_URI'
+            - 'echo Lendo imagem do BuildOutput…'
+            - 'test -f "$CODEBUILD_SRC_DIR_BuildOutput/imageDetail.json" || (echo ''imageDetail.json não encontrado em $CODEBUILD_SRC_DIR_BuildOutput'' && ls -la "$CODEBUILD_SRC_DIR_BuildOutput" && exit 1)'
+            - 'IMAGE_URI=$(python -c ''import json,sys,os; p=os.environ.get("CODEBUILD_SRC_DIR_BuildOutput",".")+"/imageDetail.json"; print(json.load(open(p))["ImageURI"])''); export IMAGE_URI'
             - 'echo Nova_imagem=$IMAGE_URI'
 
     build:
         commands:
+            - 'test -n "$IMAGE_URI" || (echo ''IMAGE_URI vazio'' && exit 1)'
             - 'kubectl -n $NAMESPACE set image deployment/hcp2-los2-eu-central-1-deployment-todo todo=$IMAGE_URI'
-            - 'kubectl -n $NAMESPACE rollout status deployment/hcp2-los2-eu-central-1-deployment-todo'
+            - 'kubectl -n $NAMESPACE rollout status deployment/hcp2-los2-eu-central-1-deployment-todo --timeout=120s'
 
 artifacts:
     files:
