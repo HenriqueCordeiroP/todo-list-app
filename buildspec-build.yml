@@ -3,23 +3,23 @@ version: 0.2
 phases:
     pre_build:
         commands:
-            - echo "Login no ECR"
-            - aws --version
-            - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URI
-            - COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
-            - echo "Tag do commit: $COMMIT_TAG"
+            - 'echo Login no ECR'
+            - 'aws --version'
+            - 'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_URI'
+            - 'COMMIT_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7); export COMMIT_TAG'
+            - 'echo CommitTag=$COMMIT_TAG'
 
     build:
         commands:
-            - echo "Buildando imagem..."
-            - docker build -t $ECR_URI:$COMMIT_TAG -t $ECR_URI:latest .
+            - 'echo Buildando imagem...'
+            - 'docker build -t $ECR_URI:$COMMIT_TAG -t $ECR_URI:latest .'
 
     post_build:
         commands:
-            - echo "Fazendo push..."
-            - docker push $ECR_URI:$COMMIT_TAG
-            - docker push $ECR_URI:latest
-            - printf '{"ImageURI":"%s"}' "$ECR_URI:$COMMIT_TAG" > imageDetail.json
+            - 'echo Fazendo push...'
+            - 'docker push $ECR_URI:$COMMIT_TAG'
+            - 'docker push $ECR_URI:latest'
+            - 'printf ''{"ImageURI":"%s"}'' "$ECR_URI:$COMMIT_TAG" > imageDetail.json'
 
 artifacts:
     files:
